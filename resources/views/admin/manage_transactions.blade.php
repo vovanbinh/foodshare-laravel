@@ -1,0 +1,256 @@
+@extends('admin/master')
+@section('content')
+<div class="card">
+    <h5 class="card-header">Quản Lí Danh Sách Tài Khoản</h5>
+    <div class="card col-lg-6 mb-3" style="padding-left: 20px; margin-left: 20px; margin-right: 20px;">
+        <form id="search-form" method="get" action="{{ route('show_manage_transactions') }}">
+            @csrf
+            <div class="row mt-2" style="margin-right:8px;">
+                <div class="col-md-12"> <!-- Ô Tìm kiếm -->
+                    <input
+                        type="text"
+                        name="searchContent"
+                        class="form-control  shadow-none" 
+                        placeholder="Search..."
+                        aria-label="Search..."
+                        value="{{ session('searchContent', '') }}"
+                    />
+                </div>
+            </div>
+            <div class="row mb-2" style=" margin-right: 10px;">
+                <div class="col-md-6"style=" margin-right: 10px;" > <!-- Trạng Thái -->
+                    <label for="transaction_status" class="col-form-label">Trạng Thái</label>
+                    <select class="form-select" id="transaction_status" name="transaction_status" >
+                        <option value="null">Tất Cả Trạng Thái</option>
+                        <option value="1">Đã Lấy</option>
+                        <option value="0">Đang Đợi Xác Nhận</option>
+                        <option value="2">Đã Hủy Nhận</option>
+                        <option value="3">Hết Thời Gian Nhận</option>
+                        <option value="4">Thực Phẩm Bị Khóa</option>
+                    </select>
+                </div>
+                <div class="col-md-4" > <!-- Tìm kiếm -->
+                    <label class="col-form-label" style="visibility: hidden;">Label Placeholder</label> 
+                    <button type="submit" class="btn btn-info" style="width: 100%;">Tìm</button>
+                </div>
+            </div>
+            
+        </form>
+    </div>
+    <div class="table-responsive" style="min-height:500px;">
+        <table class="table" id="donated-table">
+        <thead class="table-dark">
+            <tr>
+            <th class="text-info text-nowrap text-center">STT</th>
+            <th class="text-info text-nowrap text-center">Người Nhận</th>
+            <th class="text-info text-nowrap text-center">Tên Thực Phẩm</th>
+            <th class="text-info text-nowrap text-center">Hình Ảnh</th>
+            <th class="text-info text-nowrap text-center">Số Lượng</th>
+            <th class="text-info text-nowrap text-center">Trạng Thái</th>
+            <th class="text-info text-nowrap text-center">Thời Gian Tạo</th>
+            <th class="text-info text-nowrap text-center">Thao Tác</th>
+            </tr>
+        </thead>
+        <tbody class="table-border-bottom-0">
+        @foreach($transactions as $transaction)
+        <tr>
+            <td  class="text-center">{{ $loop->index + 1 }}</td>
+            <td  class="">{{ $transaction->receiver->username }}</td>
+            <td >
+            {{ $transaction->food->title }}
+            </td>
+            <td class="text-center">
+                <img src="{{$transaction->food->image_url}}" alt="food" style="min-width:40px; min-height:40px;" alt class="w-px-40 h-auto rounded-circle"height=50 width=50>
+            </td>
+            <td  class="text-center">
+            {{$transaction->quantity_received }}
+            </td>
+            <td class="text-center">
+                @if($transaction->status == 0)
+                <span class="badge bg-label-warning me-1">Đang Đợi Xác Nhận</span>
+                @elseif($transaction->status ==1)
+                <span class="badge bg-label-success me-1">Đã Lấy</span>
+                @elseif($transaction->status == 2)
+                <span class="badge bg-label-danger me-1">Đã Hủy Nhận</span>
+                @elseif($transaction->status == 3)
+                <span class="badge bg-label-danger me-1">Hết Thời Gian Nhận</span>
+                @elseif($transaction->status == 4)
+                <span class="badge bg-label-danger me-1">Thực Phẩm Bị Khóa</span>
+                @endif    
+            </td>
+            <td  class="text-center">{{ $transaction->created_at }}</td>
+            <td  class="text-center">
+                @if($transaction->status==0)
+                <div class="dropdown">
+                    <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <button class="dropdown-item lock_transaction" data-item-id="{{$transaction->id}}"> <i class="bx bx-lock me-1"></i>Khóa Giao Dịch</button>
+                    </div>
+                </div>
+                @endif
+            </td>
+        </tr>
+        @endforeach
+        </tbody>
+        </table>
+    </div>
+</div>
+<div class="row mt-2">
+    <div class="col text-center">
+        <small class="text-light fw-semibold">Trang: {{ $transactions->currentPage() }}/{{ $transactions->lastPage() }}</small>
+        <div class="demo-inline-spacing">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    @if ($transactions->onFirstPage())
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="tf-icon bx bx-chevrons-left"></i></span>
+                        </li>
+                    @else
+                        <li class="page-item">
+                            <a class="page-link" href="{{ $transactions->previousPageUrl() }}" aria-label="Previous">
+                                <i class="tf-icon bx bx-chevrons-left"></i>
+                            </a>
+                        </li>
+                    @endif
+                    @if ($transactions->onFirstPage())
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="tf-icon bx bx-chevron-left"></i></span>
+                        </li>
+                    @else
+                        <li class="page-item">
+                            <a class="page-link" href="{{ $transactions->previousPageUrl() }}" aria-label="Previous">
+                                <i class="tf-icon bx bx-chevron-left"></i>
+                            </a>
+                        </li>
+                    @endif
+                    @foreach ($transactions->getUrlRange(1, $transactions->lastPage()) as $page => $url)
+                        @if ($page == $transactions->currentPage())
+                            <li class="page-item active">
+                                <span class="page-link">{{ $page }}</span>
+                            </li>
+                        @else
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                            </li>
+                        @endif
+                    @endforeach
+                    @if ($transactions->hasMorePages())
+                        <li class="page-item">
+                            <a class="page-link" href="{{ $transactions->nextPageUrl() }}" aria-label="Next">
+                                <i class="tf-icon bx bx-chevron-right"></i>
+                            </a>
+                        </li>
+                    @else
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="tf-icon bx bx-chevron-right"></i></span>
+                        </li>
+                    @endif
+                    @if ($transactions->hasMorePages())
+                        <li class="page-item">
+                            <a class="page-link" href="{{ $transactions->url($transactions->lastPage()) }}" aria-label="Last">
+                                <i class="tf-icon bx bx-chevrons-right"></i>
+                            </a>
+                        </li>
+                    @else
+                        <li class="page-item disabled">
+                            <span class="page-link"><i class="tf-icon bx bx-chevrons-right"></i></span>
+                        </li>
+                    @endif
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+ <!-- model -->
+ <div class="modal fade" id="basicModal" tabindex="-1" aria-labelledby="exampleModalLabel1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel1">Xác Nhận Khóa Giao Dịch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col mb-3">
+                        <label  class="form-label text-warning">Bạn Có Chắc Chắn Muốn Khóa Giao Dịch Này?
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+                <button type="button" class="btn btn-confirm btn-primary" data-bs-dismiss="modal">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+ <!-- {{-- Toast --}} -->
+ <div class="bs-toast toast toast-placement-ex m-2 fade bg-warning top-0 end-0" role="alert" aria-live="assertive" aria-atomic="true" data-delay="2000">
+    <div class="toast-header">
+        <i class="bx bx-bell me-2"></i>
+        <div class="me-auto fw-semibold">FoodShare</div>
+        <small>now</small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body"></div>
+</div>
+@endsection
+@section('js')
+<script>
+var lock_transaction_success = sessionStorage.getItem('lock_transaction_success');
+function showToast(message, type) {
+    var toast = document.querySelector('.bs-toast');
+    var toastBody = toast.querySelector('.toast-body');
+    toast.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+    toast.classList.add('bg-' + type);
+    toastBody.textContent = message;
+    var bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+}
+$(document).ready(function () {
+    if (lock_transaction_success !== null) {
+        var textContent = "Khóa Giao Dịch Thành Công";
+        showToast(textContent, 'success');
+        sessionStorage.removeItem('lock_transaction_success');
+    }
+    var lock_id = null;
+    $(".lock_transaction").click(function () {
+        var itemId = $(this).data("item-id");
+        console.log(itemId);
+        lock_id = itemId; 
+        $("#basicModal").modal("show");
+    });
+    $(".btn-confirm").click(function () {
+        if (lock_id !== null) {
+            $.ajax({
+                type: 'GET',
+                url: '/manage/transaction/lock/' + lock_id,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'Accept': 'application/json'
+                },
+                dataType: 'json',
+                success: function (response) {
+                    if (response.errors) {
+                        showToast(response.errors, 'danger');
+                    } else if (response.message) {
+                        sessionStorage.setItem('lock_transaction_success', 'Khóa Giao Dịch Thành Công');
+                        window.location.reload();
+                    }
+                },
+                error: function (error) {
+                    if (error.status === 422) {
+                        var errors = error.responseJSON.errors;
+                        showToast(errors, 'danger');
+                    }
+                }
+            });
+        }
+    });
+});
+</script>
+@endsection
